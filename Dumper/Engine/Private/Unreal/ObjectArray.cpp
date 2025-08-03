@@ -54,6 +54,14 @@ constexpr inline std::array FChunkedFixedUObjectArrayLayouts =
 		.NumElementsOffset = 0x14,
 		.MaxChunksOffset = 0x10,
 		.NumChunksOffset = 0x04,
+	},
+	FChunkedFixedUObjectArrayLayout	// Grounded 2
+	{
+		.ObjectsOffset = 0x10,
+		.MaxElementsOffset = 0x20, // first
+		.NumElementsOffset = 0x24,
+		.MaxChunksOffset = 0x28,
+		.NumChunksOffset = 0x2C,
 	}
 };
 
@@ -131,10 +139,10 @@ bool IsAddressValidGObjects(const uintptr_t Address, const FChunkedFixedUObjectA
 	if (ElementsPerChunk < 0x8000 || ElementsPerChunk > 0x80000)
 		return false;
 
-	const bool bNumChunksFitsNumElements = ((NumElements / ElementsPerChunk) + 1) == NumChunks;
-
-	if (!bNumChunksFitsNumElements)
-		return false;
+	//const bool bNumChunksFitsNumElements = ((NumElements / ElementsPerChunk) + 1) == NumChunks;
+	//
+	//if (!bNumChunksFitsNumElements)
+	//	return false;
 
 	const bool bMaxChunksFitsMaxElements = (MaxElements / ElementsPerChunk) == MaxChunks;
 
