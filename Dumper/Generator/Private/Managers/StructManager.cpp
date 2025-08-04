@@ -67,7 +67,15 @@ void StructManager::InitAlignmentsAndNames()
 		// Add name to override info
 		StructInfo& NewOrExistingInfo = StructInfoOverrides[Obj.GetIndex()];
 		NewOrExistingInfo.Name = UniqueNameTable.FindOrAdd(Obj.GetCppName(), !Obj.IsA(EClassCastFlags::Function)).first;
-
+		if (Obj.GetCppName() == "FDataTableRowHandle")
+		{
+			NewOrExistingInfo.Alignment = 0x8;
+			NewOrExistingInfo.bHasReusedTrailingPadding = true;
+			NewOrExistingInfo.bIsFinal = false;
+			NewOrExistingInfo.Size = 0x10;
+			NewOrExistingInfo.bUseExplicitAlignment = true;
+			continue;
+		}
 		// Interfaces inherit from UObject by default, but as a workaround to no virtual-inheritance we make them empty
 		if (ObjAsStruct.HasType(InterfaceClass))
 		{
@@ -145,7 +153,7 @@ void StructManager::InitAlignmentsAndNames()
 		}
 	}
 }
-
+static StructInfo _GFDataTableRowHandle;
 void StructManager::InitSizesAndIsFinal()
 {
 	const UEClass InterfaceClass = ObjectArray::FindClassFast("Interface");
@@ -158,16 +166,20 @@ void StructManager::InitSizesAndIsFinal()
 		UEStruct ObjAsStruct = Obj.Cast<UEStruct>();
 
 		StructInfo& NewOrExistingInfo = StructInfoOverrides[Obj.GetIndex()];
-
 		// Initialize struct-size if it wasn't set already
 		if (NewOrExistingInfo.Size > ObjAsStruct.GetStructSize())
 			NewOrExistingInfo.Size = ObjAsStruct.GetStructSize();
 
 		UEStruct Super = ObjAsStruct.GetSuper();
-
 		if (NewOrExistingInfo.Size == 0x0 && Super != nullptr)
 			NewOrExistingInfo.Size = Super.GetStructSize();
-
+		if (Obj.GetCppName() == "FDataTableRowHandle")
+		{
+			NewOrExistingInfo.Alignment = 0x8;
+			NewOrExistingInfo.Size = 0x10;
+			_GFDataTableRowHandle = NewOrExistingInfo;
+			continue;
+		}
 		int32 LastMemberEnd = 0x0;
 		int32 LowestOffset = INT_MAX;
 
@@ -208,6 +220,10 @@ void StructManager::InitSizesAndIsFinal()
 
 			StructInfo& Info = It->second;
 
+			if (Info.Name == _GFDataTableRowHandle.Name)
+			{
+				continue;
+			}
 			// Struct is not final, as it is another structs' super
 			Info.bIsFinal = false;
 
